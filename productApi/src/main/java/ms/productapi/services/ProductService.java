@@ -64,8 +64,14 @@ public class ProductService {
     }
 
     public List<ProductResponseDTO> findAllProducts() {
-        return productRepository.findAll()
-                .stream()
+
+        List<Product> products = productRepository.findAll();
+
+        if (products.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Nenhum produto encontrado.");
+        }
+
+        return products.stream()
                 .map(p -> new ProductResponseDTO(
                         p.getName(),
                         p.getDescription(),
@@ -78,7 +84,14 @@ public class ProductService {
     }
 
     public List<ProductResponseDTO> findAllProductsByCategory(String categoryName) {
-        return productRepository.findAll()
+
+        List<Product> products = productRepository.findAll();
+
+        if (products.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Nenhum produto encontrado.");
+        }
+
+        return products
                 .stream()
                 .filter(p -> p.getCategory().getName().equals(categoryName))
                 .map(p -> new ProductResponseDTO(

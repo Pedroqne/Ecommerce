@@ -79,9 +79,8 @@ public class ProductServiceTest {
 
         ;
 
-         product1 = criarProduto(1L, "Produto 1", BigDecimal.valueOf(100), category);
-         product2 = criarProduto(2L, "Produto 2", BigDecimal.valueOf(100), category);
-
+        product1 = criarProduto(1L, "Produto 1", BigDecimal.valueOf(100), category);
+        product2 = criarProduto(2L, "Produto 2", BigDecimal.valueOf(100), category);
 
 
         productResponseDT1 = new ProductResponseDTO(
@@ -208,14 +207,67 @@ public class ProductServiceTest {
         verify(productRepository, times(1)).findById(1L);
     }
 
+    @Test
+    @DisplayName("Deve lançar ResponseStatusException (404) quando produto não é encontrado por ID")
+    void deveLancarResponseStatusExceptionQuandoProdutoNaoEncontradoPeloId() {
+
+        when(productRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> productService.getProductById(99L))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND)
+                .hasMessageContaining("Produto não encontrado");
+    }
+
+    @Test
+    @DisplayName("Deve lançar ResponseStatusException (404) quando nenhum produto é encontrado")
+    void deveLancarResponseStatusExceptionQuandoNenhumProdutoEncontrado() {
+
+        when(productRepository.findAll()).thenReturn(List.of());
+
+        assertThatThrownBy(() -> productService.findAllProducts())
+                .isInstanceOf(ResponseStatusException.class)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND)
+                .hasMessageContaining("Nenhum produto encontrado.");
+    }
+
+    @Test
+    @DisplayName("Deve retornar produtos filtrando pela categoria caso for encontrado")
+    void deveRetonarProdutosFiltrandoPelaCategoria() {
+
+        Category category2 = criarCategoria(2L, "Livros");
+        Product product3 = criarProduto(1L, "Livro de Teste", new BigDecimal("100.00"), category2);
+
+        List<Product> products = List.of(product1, product2, product3);
+
+        when(productRepository.findAll()).thenReturn(products);
+
+        List<ProductResponseDTO> produtosFiltrados = productService.findAllProductsByCategory(product1.getCategory().getName());
+
+
+        assertThat(produtosFiltrados).isNotNull();
+        assertThat(produtosFiltrados.size()).isEqualTo(2);
+        assertThat(produtosFiltrados.get(0).name()).isEqualTo(product1.getName());
+        assertThat(produtosFiltrados.get(1).name()).isEqualTo(product2.getName());
+
+        verify(productRepository, times(1)).findAll();
 
 
 
 
 
+    }
 
+    @Test
+    @DisplayName("Deve lançar ResponseStatusException (404) quando nenhum produto é encontrado quando filtrado pela categoria")
+    void deveLancarResponseStatusExceptionQuandoProdutoNaoForEncontradoFiltradoPeloCategoria() {
+        when(productRepository.findAll()).thenReturn(List.of());
 
-
-
+        assertThatThrownBy(() -> productService.findAllProductsByCategory(product1.getCategory().getName()))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND)
+                .hasMessageContaining("Nenhum produto encontrado.");
+    }
 
 }
+

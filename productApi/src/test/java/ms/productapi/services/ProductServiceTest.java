@@ -269,5 +269,37 @@ public class ProductServiceTest {
                 .hasMessageContaining("Nenhum produto encontrado.");
     }
 
+    @Test
+    @DisplayName("Deve deletar um produto com sucesso e retornar 204 NO_CONTENT")
+    void deveDeletarUmProdutoComSucesso() {
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product1));
+
+        doNothing().when(productRepository).deleteById(1L);
+
+        ResponseEntity<Void> responseEntity = productService.deleteProduct(1L);
+
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        verify(productRepository, times(1)).findById(1L);
+        verify(productRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    @DisplayName("Deve lançar ResponseStatusException (404) quando nenhum produto for encontrado para ser deletado")
+    void deveLancarResponseStatusExceptionQuandoNenhumProdutoForDeletado() {
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
+
+
+        assertThatThrownBy(() -> productService.deleteProduct(1L))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND)
+                .hasMessageContaining("Produto não encontrado.");
+
+
+        verify(productRepository, times(1)).findById(1L);
+        verify(productRepository, never()).deleteById(1L);
+    }
+
+
 }
 

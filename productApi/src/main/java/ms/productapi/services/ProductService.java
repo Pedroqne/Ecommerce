@@ -136,9 +136,9 @@ public class ProductService {
     public ResponseEntity<Void> deleteProduct(Long id){
 
         var product = productRepository.findById(id).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado."));
 
-        productRepository.delete(product);
+        productRepository.deleteById(id);
 
         return ResponseEntity.noContent().build();
 
